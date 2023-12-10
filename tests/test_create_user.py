@@ -34,10 +34,10 @@ class TestCreateUser:
     @allure.title("Проверка создания уже зарегистрированного пользователя")
     @allure.description("Проверка того, что нельзя создать двух одинаковых пользователей;"
                         " если создать пользователя с email, который уже есть, возвращается ошибка")
-    def test_create_new_user_twice(self):
-        email = generate_random_email(8)
-        password = generate_random_string(8)
-        name = generate_random_string(8)
+    def test_create_new_user_twice(self, create_new_user_and_return_email_password):
+        email = create_new_user_and_return_email_password[0]
+        password = create_new_user_and_return_email_password[1]
+        name = create_new_user_and_return_email_password[2]
 
         payload = {
             "email": email,
@@ -45,12 +45,9 @@ class TestCreateUser:
             "name": name
         }
 
-        first_response = requests.post(Urls.CREATE_USER_URL, data=payload)
-        second_response = requests.post(Urls.CREATE_USER_URL, data=payload)
-        assert second_response.status_code == 403
-        assert second_response.text == '{"success":false,"message":"User already exists"}'
-        access_token = first_response.json()['accessToken']
-        requests.delete(Urls.GET_USER_DATA_URL, headers={'Authorization': access_token})
+        response = requests.post(Urls.CREATE_USER_URL, data=payload)
+        assert response.status_code == 403
+        assert response.text == '{"success":false,"message":"User already exists"}'
 
     @allure.title("Создание пользователя без одного из обязательных полей")
     @allure.description("Проверка того, что нельзя создать нового пользователя без обязательных полей;"
